@@ -1,0 +1,25 @@
+{
+  "name": "clio-timer",
+  "version": "0.1.0",
+  "description": "A cross-platform desktop application for time tracking.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron main.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/clio/timer.git"
+  },
+  "keywords": [],
+  "author": "Clio",
+  "bugs": {
+    "url": "https://github.com/clio/timer/issues"
+  },
+  "homepage": "https://github.com/clio/timer#readme",
+  "devDependencies": {
+    "electron-prebuilt": "^1.0.1"
+  },
+  "dependencies": {
+    "electron-positioner": "^3.0.0"
+  }
+}
