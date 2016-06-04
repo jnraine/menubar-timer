@@ -3,32 +3,30 @@ const path = require('path')
 const events = require('events')
 const fs = require('fs')
 
-const electron = require('electron')
-const app = electron.app
-const Tray = electron.Tray
-const BrowserWindow = electron.BrowserWindow
+const {app, Tray, BrowserWindow} = require('electron')
 
 const extend = require('extend')
 const Positioner = require('electron-positioner')
+const assetsDir = path.join(__dirname, "assets")
 
 const trayIcons = {
-  inactive: path.join(__dirname, 'IconTemplate.png'),
-  active: path.join(__dirname, 'IconTemplateBlue.png'),
+  inactive: path.join(assetsDir, 'images/IconTemplate.png'),
+  active: path.join(assetsDir, 'images/IconTemplateBlue.png'),
 }
 
-const MenuBar = function(opts) {
-  if (typeof opts === 'undefined') opts = {dir: app.getAppPath()}
-  if (typeof opts === 'string') opts = {dir: opts}
-  if (!opts.dir) opts.dir = app.getAppPath()
-  if (!(path.isAbsolute(opts.dir))) opts.dir = path.resolve(opts.dir)
-  if (!opts.index) opts.index = 'file://' + path.join(opts.dir, 'index.html')
-  if (!opts['window-position']) opts['window-position'] = (process.platform === 'win32') ? 'trayBottomCenter' : 'trayCenter'
-  if (typeof opts['show-dock-icon'] === 'undefined') opts['show-dock-icon'] = false
+const MenuBar = function(options) {
+  if (typeof options === 'undefined') options = {dir: app.getAppPath()}
+  if (typeof options === 'string') options = {dir: options}
+  if (!options.dir) options.dir = app.getAppPath()
+  if (!(path.isAbsolute(options.dir))) options.dir = path.resolve(options.dir)
+  if (!options.index) options.index = 'file://' + path.join(__dirname, 'index.html')
+  if (!options['window-position']) options['window-position'] = (process.platform === 'win32') ? 'trayBottomCenter' : 'trayCenter'
+  if (typeof options['show-dock-icon'] === 'undefined') options['show-dock-icon'] = false
 
-  // set width/height on opts to be usable before the window is created
-  opts.width = opts.width || 300
-  opts.height = opts.height || 400
-  opts.tooltip = opts.tooltip || ''
+  // set width/height on options to be usable before the window is created
+  options.width = options.width || 300
+  options.height = options.height || 400
+  options.tooltip = options.tooltip || ''
 
   app.on('ready', appReady)
 
@@ -37,31 +35,28 @@ const MenuBar = function(opts) {
 
   // Set / get options
   menuBar.setOption = function (opt, val) {
-    opts[opt] = val
+    options[opt] = val
   }
 
   menuBar.getOption = function (opt) {
-    return opts[opt]
+    return options[opt]
   }
 
   return menuBar
 
   function appReady () {
     console.log("Running appReady")
-    if (app.dock && !opts['show-dock-icon']) app.dock.hide()
-
-    var iconPath = opts.icon || path.join(opts.dir, 'IconTemplate.png')
-    if (!fs.existsSync(iconPath)) iconPath = path.join(__dirname, 'example', 'IconTemplate.png') // default cat icon
+    if (app.dock && !options['show-dock-icon']) app.dock.hide()
 
     var cachedBounds // cachedBounds are needed for double-clicked event
-    var defaultClickEvent = opts['show-on-right-click'] ? 'right-click' : 'click'
+    var defaultClickEvent = options['show-on-right-click'] ? 'right-click' : 'click'
 
-    menuBar.tray = opts.tray || new Tray(iconPath)
+    menuBar.tray = options.tray || new Tray(trayIcons.inactive)
     menuBar.tray.on(defaultClickEvent, clicked)
     menuBar.tray.on('double-click', clicked)
-    menuBar.tray.setToolTip(opts.tooltip)
+    menuBar.tray.setToolTip(options.tooltip)
 
-    if (opts.preloadWindow || opts['preload-window']) {
+    if (options.preloadWindow || options['preload-window']) {
       createWindow()
     }
 
@@ -83,23 +78,23 @@ const MenuBar = function(opts) {
         frame: false
       }
 
-      var winOpts = extend(defaults, opts)
-      menuBar.window = new BrowserWindow(winOpts)
+      var windowOptions = extend(defaults, options)
+      menuBar.window = new BrowserWindow(windowOptions)
 
       menuBar.positioner = new Positioner(menuBar.window)
 
-      if (!opts['always-on-top']) {
+      if (!options['always-on-top']) {
         menuBar.window.on('blur', hideWindow)
       } else {
         menuBar.window.on('blur', emitBlur)
       }
 
-      if (opts['show-on-all-workspaces'] !== false) {
+      if (options['show-on-all-workspaces'] !== false) {
         menuBar.window.setVisibleOnAllWorkspaces(true)
       }
 
       menuBar.window.on('close', windowClear)
-      menuBar.window.loadURL(opts.index)
+      menuBar.window.loadURL(options.index)
       menuBar.emit('after-create-window')
     }
 
@@ -120,14 +115,14 @@ const MenuBar = function(opts) {
 
       // Default the window to the right if `trayPos` bounds are undefined or null.
       var noBoundsPosition = null
-      if ((trayPos === undefined || trayPos.x === 0) && opts['window-position'].substr(0, 4) === 'tray') {
+      if ((trayPos === undefined || trayPos.x === 0) && options['window-position'].substr(0, 4) === 'tray') {
         noBoundsPosition = (process.platform === 'win32') ? 'bottomRight' : 'topRight'
       }
 
-      var position = menuBar.positioner.calculate(noBoundsPosition || opts['window-position'], trayPos)
+      var position = menuBar.positioner.calculate(noBoundsPosition || options['window-position'], trayPos)
 
-      var x = (opts.x !== undefined) ? opts.x : position.x
-      var y = (opts.y !== undefined) ? opts.y : position.y
+      var x = (options.x !== undefined) ? options.x : position.x
+      var y = (options.y !== undefined) ? options.y : position.y
 
       menuBar.window.setPosition(x, y)
       menuBar.window.show()
@@ -173,9 +168,11 @@ var timeSince = function(startTime) {
 }
 
 const mb = MenuBar({
-  "dir": __dirname,
   "preload-window": true,
-  "tooltip": "Clio Time Tracking"
+  "tooltip": "Clio Time Tracking",
+  "width": 370,
+  "height": 510,
+  "transparent": true
 })
 
 mb.on('ready', function ready() {
