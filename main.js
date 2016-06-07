@@ -3,12 +3,12 @@ const path = require('path')
 const events = require('events')
 const fs = require('fs')
 
-const {app, Tray, BrowserWindow} = require('electron')
+const {app, BrowserWindow, Menu, Tray, ipcMain} = require('electron')
 
 const extend = require('extend')
 const Positioner = require('electron-positioner')
-const assetsDir = path.join(__dirname, "assets")
 
+const assetsDir = path.join(__dirname, "assets")
 const trayIcons = {
   inactive: path.join(assetsDir, 'images/IconTemplate.png'),
   active: path.join(assetsDir, 'images/IconTemplateBlue.png'),
@@ -45,15 +45,21 @@ const MenuBar = function(options) {
   return menuBar
 
   function appReady () {
-    console.log("Running appReady")
-    if (app.dock && !options['show-dock-icon']) app.dock.hide()
+    // if (app.dock && !options['show-dock-icon']) app.dock.hide()
 
     var cachedBounds // cachedBounds are needed for double-clicked event
     var defaultClickEvent = options['show-on-right-click'] ? 'right-click' : 'click'
 
+    const rightClickContextMenu = Menu.buildFromTemplate([
+      {label: 'Version: 1.0.0', enabled: false}
+    ])
+
     menuBar.tray = options.tray || new Tray(trayIcons.inactive)
     menuBar.tray.on(defaultClickEvent, clicked)
     menuBar.tray.on('double-click', clicked)
+    menuBar.tray.on('right-click', function() {
+      rightClickContextMenu.popup(menuBar.window)
+    })
     menuBar.tray.setToolTip(options.tooltip)
 
     if (options.preloadWindow || options['preload-window']) {
@@ -63,6 +69,11 @@ const MenuBar = function(options) {
     menuBar.showWindow = showWindow
     menuBar.hideWindow = hideWindow
     menuBar.emit('ready')
+
+    ipcMain.on('api-key-updated', (event) => {
+      console.log("api-key-updated fired in main")
+      menuBar.window.webContents.send('api-key-updated')
+    });
 
     function clicked (e, bounds) {
       if (e.altKey || e.shiftKey || e.ctrlKey || e.metaKey) return hideWindow()
@@ -131,6 +142,7 @@ const MenuBar = function(options) {
     }
 
     function hideWindow () {
+      return
       if (!menuBar.window) return
       menuBar.emit('hide')
       menuBar.window.hide()
@@ -145,6 +157,8 @@ const MenuBar = function(options) {
     function emitBlur () {
       menuBar.emit('focus-lost')
     }
+
+    showWindow()
   }
 }
 
@@ -170,31 +184,25 @@ var timeSince = function(startTime) {
 const mb = MenuBar({
   "preload-window": true,
   "tooltip": "Clio Time Tracking",
-  "width": 370,
+  "width": 316,
   "height": 510,
   "transparent": true
 })
 
 mb.on('ready', function ready() {
-  var startTime = null;
-
-  setInterval(function() {
-    if (startTime) {
-      mb.tray.setTitle(timeSince(startTime))
+  ipcMain.on('elapsed-time', (event, elapsedTime) => {
+    if (elapsedTime) {
+      mb.tray.setImage(trayIcons.active)
+      mb.tray.setTitle(elapsedTime)
     } else {
-      mb.tray.setTitle("");
+      mb.tray.setTitle("")
+      mb.tray.setImage(trayIcons.inactive)
     }
-  }, 1000)
+  });
 
   mb.tray.on('click', function(event) {
     if (event.metaKey) {
-      if (startTime) {
-        startTime = null
-        mb.tray.setImage(trayIcons.inactive);
-      } else {
-        startTime = new Date().getTime();
-        mb.tray.setImage(trayIcons.active);
-      }
+      // TODO: Tell renderer to start timer
     }
   })
 })

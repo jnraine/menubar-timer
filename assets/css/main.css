@@ -1,7 +1,7 @@
 body {
   padding: 0;
   margin: 0;
-  width: 370px;
+  width: 316px;
 }
 
 #transparent-divider {
@@ -29,9 +29,38 @@ body {
   border-top-right-radius: 5px;
 }
 
+#top-bar .left {
+  height: 55px;
+  float: left;
+}
+
+#top-bar .right {
+  height: 55px;
+  float: right;
+}
+
+#top-bar .right .fa {
+  color: #fff;
+  font-size: 18px;
+  line-height: 35px;
+  padding-top: 12px;
+  margin: 0;
+}
+
+#top-bar .right .fa-cog {
+  color: #032d46;
+  padding-right: 6px;
+  opacity
+}
+
+#top-bar .right .fa-plus {
+  padding-right: 18px;
+}
+
 #content {
   background: #fff;
   height: 550px;
+  width: 316px;
   overflow-y: scroll;
   border-bottom-left-radius: 5px;
   border-bottom-right-radius: 5px;
@@ -42,4 +71,27 @@ body {
   width: 35px;
   height: 35px;
   padding: 11px;
+}
+
+:not(input):not(textarea),
+:not(input):not(textarea)::after,
+:not(input):not(textarea)::before {
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: default;
+}
+
+input, button, textarea, :focus {
+    outline: none; // You should add some other style for :focus to help UX/a11y
+}
+
+a:not([draggable=true]), img:not([draggable=true]) {
+    -webkit-user-drag: none;
+    user-drag: none; /* Technically not supported in Electron yet */
+}
+a[href^="http://"],
+a[href^="https://"],
+a[href^="ftp://"] {
+    -webkit-user-drag: auto;
+    user-drag: auto; /* Technically not supported in Electron yet */
 }

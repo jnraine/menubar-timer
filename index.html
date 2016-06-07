@@ -6,22 +6,52 @@
     <link rel="stylesheet" href="assets/css/font-awesome.css">
     <link rel="stylesheet" href="assets/css/main.css">
   </head>
-  <body>
+  <body ng-app="TimerApp" ng-controller="mainController as controller">
     <div id="transparent-divider">
       <i class="fa fa-caret-up" aria-hidden="true"></i>
     </div>
     <div id="top-bar">
-      <img class="avatar" src="assets/images/avatar.jpeg">
+      <div class="left">
+        <img class="avatar" src="assets/images/avatar.jpeg">
+      </div>
+      <div class="right">
+        <i class="fa fa-cog" aria-hidden="true"></i>
+        <i class="fa fa-plus" aria-hidden="true"></i>
+      </div>
     </div>
     <div id="content">
-      We are using node <script>document.write(process.versions.node)</script>,
-      Chromium <script>document.write(process.versions.chrome)</script>,
-      and Electron <script>document.write(process.versions.electron)</script>.
+      <div ng-show="controller.credentials">
+        <div ng-show="controller.loading">Loading...</div>
+
+        <h1>{{controller.elapsedTime}}</h1>
+
+        <div ng-show="controller.timeEntries.length == 0 && !controller.loading">No time entries found</div>
+
+        <div>{{controller.timer}}</div>
+
+        <div class="time-entry" ng-show="controller.timeEntries.length > 0" ng-repeat="timeEntry in controller.timeEntries">
+          <hr>
+          <div class="matter">
+            <span ng-if="timeEntry.matter">{{timeEntry.matter.name}}</span>
+            <span ng-hide="timeEntry.matter"><i>no matter</i></span>
+          </div>
+          <div class="activity-description">{{timeEntry.activity_description.name}}</div>
+          <div class="edit"><a href="#">Edit</a></div>
+          <div ng-if="timeEntry.id != controller.webTimer.activity.id" class="timer">{{timeEntry.quantity | secondsToDuration}}</div>
+          <div ng-if="timeEntry.id == controller.webTimer.activity.id" class="timer">{{controller.elapsedTime}}</div>
+          <div ng-if="timeEntry.id == controller.webTimer.activity.id" class="timer">ACTIVE</div>
+        </div>
+      </div>
+
+      <div ng-hide="controller.credentials">
+        <div class="error">Credentials not found!</div>
+      </div>
     </div>
   </body>
 
+  <script src="./assets/javascript/angular.min.js"></script>
+  <script src="./assets/javascript/angular-resource.min.js"></script>
   <script>
-    // You can also require other files to run in this process
     require('./renderer.js')
   </script>
 </html>
